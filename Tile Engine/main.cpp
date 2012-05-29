@@ -1,6 +1,8 @@
 #include <allegro5.h>
 #include <fstream> 
-#include <stdio.h>
+#include <iostream>
+#include <allegro_primitives.h>
+
 
 #define SCREEN_WIDTH	640
 #define SCREEN_HEIGHT	480
@@ -12,18 +14,16 @@
 ALLEGRO_DISPLAY *display = NULL; 
 ALLEGRO_EVENT_QUEUE *evq = NULL; 
 ALLEGRO_TIMER *timer = NULL;
-ALLEGRO_BITMAP *buffer = NULL; 
+ALLEGRO_BITMAP *buffer = al_lock_bitmap(); 
 ALLEGRO_BITMAP *map = NULL;
-ALLEGRO_COLOR black = al_map_rgb(0, 0, 0);
+ALLEGRO_COLOR black = al_map_rgb(0, 0, 0), purple = al_map_rgb(255, 0, 255), blue = al_map_rgb(0, 0, 255), red = al_map_rgb(255, 0, 0), white = al_map_rgb(255, 255, 255), green = al_map_rgb(0, 255, 0);
 ALLEGRO_EVENT ev;
 
 bool mapRedraw = false, wallMode = false, floorMode = false, help = false, done = false; 
 
 int otherCount = 0;
 int mapArray[MAP_HEIGHT][MAP_WIDTH];
-int mouse_b=0;
-int mouse_x, mouse_y;
-int mouse_dx, mouse_dy;
+
 
 
 int destroy(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *evqueue, ALLEGRO_TIMER *timer);  
@@ -46,6 +46,7 @@ int main(void)
 	al_install_keyboard();
 
 	al_install_mouse();
+	al_init_primitives_addon();
 
 	al_register_event_source(evq, al_get_mouse_event_source());
 	al_register_event_source(evq, al_get_keyboard_event_source());
@@ -155,21 +156,61 @@ int destroy(ALLEGRO_DISPLAY *display1, ALLEGRO_EVENT_QUEUE *evqueue, ALLEGRO_TIM
 
 void draw()
 {
+	al_set_target_bitmap(buffer);
+	al_clear_to_color(black);
+	al_draw_bitmap(map, 1.0f, 1.0f, NULL);
+	
+	if(help) //do we need to display help?
+    {
+        std::cout << "Press S to save the map";
+        std::cout << "Press L to load a map ";
+		std::cout << "Press W to place a Wall";
+		std::cout << "Press F to place a Floor";
+    }
+	else if (!help)
+	{
+		system("cls");
+	}
+
+	if (wallMode)
+	{
+		al_draw_filled_rectangle(mouse_x - 16, mouse_y - 16, mouse_x + 16, mouse_y + 16, green);
+		al_draw_rectangle(mouse_x-16,mouse_y-16,mouse_x+16,mouse_y+16, red, 2);
+	}
+
+	else if (floorMode)
+	{
+		al_draw_filled_rectangle(mouse_x - 16, mouse_y - 16, mouse_x + 16, mouse_y + 16, white);
+		al_draw_rectangle(mouse_x-16,mouse_y-16,mouse_x+16,mouse_y+16, red, 2);
+	}
+
+	else 
+	{
+		al_draw_filled_circle(mouse_x, mouse_y, 4, red);
+	}
+
+	al_set_target_bitmap(al_get_backbuffer(display); 
+	al_draw_bitmap(buffer, 0, 0, NULL);
+	al_flip_display();
 }
 
 void drawmap()
 {
-
-
-
-
-	if(help) //do we need to display help?
-    {
-       cout << "Press S to save the map";
-        textout(buffer,font,"Press L to load a map ",50,100,makecol,0,255));
-        textout(buffer,font,"Press W to place a Wall",50,150,make(0col(0,0,255));
-        textout(buffer,font,"Press F to place a Floor",50,200,makecol(0,0,255));
-    }
+	al_set_target_bitmap(map);
+	for (int i = 0; i < MAP_HEIGHT; i++)
+	{
+		for (int j = 0; j < MAP_WIDTH; j++)
+		{
+			if (mapArray[i][j] == 0)
+			{
+				al_draw_filled_rectangle(j*32, i*32, j*32+32, i*32+32, red);
+			}
+			else if (mapArray[i][j])
+			{
+				al_draw_filled_rectangle(j*32, i*32, j*32+32, i*32+32, red);
+			}
+		}
+	}
 }
 
 void edit()
